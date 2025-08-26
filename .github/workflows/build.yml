@@ -1,0 +1,22 @@
+name: Build ReleaseZipper
+
+on:
+  push:
+    tags:
+      - 'v*'   # Só roda quando criamos uma tag começando com v
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+
+    - name: Instalar .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Compilar ReleaseZipper
+      run: dotnet publish -c Release -r win-x64 --self-contained false /p:InformationalVersion=${{ github.ref_name }}
