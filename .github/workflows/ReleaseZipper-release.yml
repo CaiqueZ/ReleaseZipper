@@ -1,167 +1,86 @@
 name: Build and Release
 
-
-
 on:
-
-  push:
-
-    tags:
-
-      - 'v*' # Dispara o workflow em tags como v1.0, v1.2.3
-
-
+  push:
+    tags:
+      - 'v*' # Dispara o workflow em tags como v1.0, v1.2.3
 
 permissions:
-
-  contents: write # Permissão para criar o release
-
-
+  contents: write # Permissão para criar o release
 
 jobs:
-
-  build-and-release:
-
-    runs-on: windows-latest
-
-
-
-    steps:
-
-      # 1. Clona o repositório
-
-      - name: Checkout repository
-
-        uses: actions/checkout@v4
-
-
-
-      # 2. Configura o ambiente .NET 8
-
-      - name: Setup .NET 8.x
-
-        uses: actions/setup-dotnet@v4
-
-        with:
-
-          dotnet-version: 8.0.x
-
-
-
-      # 3. Restaura as dependências do projeto
-
-      - name: Restore dependencies
-
-        run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
-
-
-
-      # --- ETAPA DE BUILD ---
-
-
-
-      # 4. Publica a versão PORTABLE (grande, mas funciona em qualquer lugar)
-
-      - name: Build and Publish (Portable)
-
-        run: >
-
-          dotnet publish ReleaseZipper/ReleaseZipper.csproj
-
-          --configuration Release
-
-          --runtime win-x64
-
-          --self-contained true
-
-          -p:PublishSingleFile=true
-
-          -p:EnableCompressionInSingleFile=true
-
-          -p:AssemblyInformationalVersion=${{ github.ref_name }}
-
-          --output ./publish-portable
-
-
-
-      # 5. Publica a versão FRAMEWORK-DEPENDENT (pequena, requer .NET 8)
-
-      - name: Build and Publish (Framework-Dependent)
-
-        run: >
-
-          dotnet publish ReleaseZipper/ReleaseZipper.csproj
-
-          --configuration Release
-
-          --runtime win-x64
-
-          --self-contained false
-
-          -p:PublishSingleFile=true
-
-          -p:AssemblyInformationalVersion=${{ github.ref_name }}
-
-          --output ./publish-framework-dependent
-
-
-
-      # --- ETAPA DE EMPACOTAMENTO ---
-
-
-
-      # 6. Cria o ZIP da versão PORTABLE com o novo nome
-
-      - name: Create ZIP for Portable Version
-
-        run: 7z a ReleaseZipper-portable-${{ github.ref_name }}.zip ./publish-portable/*
-
-
-
-      # 7. Cria o ZIP da versão FRAMEWORK-DEPENDENT com o novo nome
-
-      - name: Create ZIP for Framework-Dependent Version
-
-        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./publish-framework-dependent/*
-
-      
-
-      # --- ETAPA DE RELEASE ---
-
-
-
-      # 8. Cria o Release no GitHub e anexa AMBOS os arquivos com os nomes corretos
-
-      - name: Create GitHub Release and Upload Artifacts
-
-        uses: softprops/action-gh-release@v2
-
-        with:
-
-          # Lista os novos nomes dos arquivos para upload
-
-          files: |
-
-            ReleaseZipper-portable-${{ github.ref_name }}.zip
-
-            ReleaseZipper-${{ github.ref_name }}.zip
-
-          # O corpo do release foi atualizado para refletir os novos nomes
-
-          body: |
-
-            Release gerado automaticamente a partir da tag ${{ github.ref_name }}.
-
-
-
-            **Downloads:**
-
-            ### **`⚠️Atenção`**: Esse programa foi desenvolvido para rodar em versões do Windows 10/11+.
-
-            - **`ReleaseZipper-portable-${{ github.ref_name }}.zip`**: Versão completa que funciona em qualquer Windows 64-bit, sem precisar instalar nada.
-
-            - **`ReleaseZipper-${{ github.ref_name }}.zip`**: Versão menor que requer a instalação do [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0).
-
-        env:
-
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      # 1. Clona o repositório
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura o ambiente .NET 8
+      - name: Setup .NET 8.x
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 3. Restaura as dependências
+      - name: Restore dependencies
+        run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
+
+      # 4. Extrai a versão numérica da tag (ex: "v1.0.20" -> "1.0.20")
+      - name: Extract version from tag
+        id: tag_version
+        shell: pwsh
+        run: echo "VERSION=$($env:GITHUB_REF_NAME.Substring(1))" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      # 5. Publica a versão PORTABLE
+      - name: Build and Publish (Portable)
+        run: >
+          dotnet publish ReleaseZipper/ReleaseZipper.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:Version=${{ steps.tag_version.outputs.VERSION }}
+          -p:FileVersion=${{ steps.tag_version.outputs.VERSION }}
+          -p:InformationalVersion=${{ github.ref_name }}
+          --output ./publish-portable
+
+      # 6. Publica a versão FRAMEWORK-DEPENDENT
+      - name: Build and Publish (Framework-Dependent)
+        run: >
+          dotnet publish ReleaseZipper/ReleaseZipper.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained false
+          -p:PublishSingleFile=true
+          -p:Version=${{ steps.tag_version.outputs.VERSION }}
+          -p:FileVersion=${{ steps.tag_version.outputs.VERSION }}
+          -p:InformationalVersion=${{ github.ref_name }}
+          --output ./publish-framework-dependent
+
+      # 7. Cria o ZIP da versão PORTABLE
+      - name: Create ZIP for Portable Version
+        run: 7z a ReleaseZipper-portable-${{ github.ref_name }}.zip ./publish-portable/*
+
+      # 8. Cria o ZIP da versão FRAMEWORK-DEPENDENT
+      - name: Create ZIP for Framework-Dependent Version
+        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./publish-framework-dependent/*
+      
+      # 9. Cria o Release no GitHub
+      - name: Create GitHub Release and Upload Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ReleaseZipper-portable-${{ github.ref_name }}.zip
+            ReleaseZipper-${{ github.ref_name }}.zip
+          body: |
+            Release gerado automaticamente a partir da tag ${{ github.ref_name }}.
+
+            **Downloads:**
+            ### **`⚠️Atenção`**: Esse programa foi desenvolvido para rodar em versões do Windows 10/11+.
+            - **`ReleaseZipper-portable-${{ github.ref_name }}.zip`**: Versão completa que funciona em qualquer Windows 64-bit, sem precisar instalar nada.
+            - **`ReleaseZipper-${{ github.ref_name }}.zip`**: Versão menor que requer a instalação do [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
