@@ -24,15 +24,15 @@ jobs:
              /p:PublishSingleFile=true `
              /p:InformationalVersion=${{ github.ref_name }}
 
-    - name: Empacotar release.zip
+    - name: Empacotar ReleaseZipper-${{ github.ref_name }}.zip
       run: |
         cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-        7z a ../../../../release.zip *
+        7z a ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
 
     - name: Publicar no GitHub Releases
       uses: softprops/action-gh-release@v1
       with:
-        files: ./ReleaseZipper/bin/Release/net8.0-windows/release.zip
+        files: ./ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-${{ github.ref_name }}.zip
         body: "Release gerado automaticamente a partir da tag ${{ github.ref_name }}"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
