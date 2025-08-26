@@ -1,4 +1,4 @@
-name: Build ReleaseZipper
+name: ReleaseZipper Release
 
 on:
   push:
