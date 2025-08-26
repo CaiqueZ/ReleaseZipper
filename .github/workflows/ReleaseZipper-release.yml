@@ -1,64 +1,51 @@
-# Nome do Workflow
-name: Build and Release .NET
+name: Build and Release
 
-# Gatilho: Executa sempre que uma nova tag no formato 'v*' (ex: v1.0, v1.2.3) for criada
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*' # Dispara o workflow em tags como v1.0, v1.2.3
 
-# Permissões necessárias para a Action criar um Release no seu repositório
 permissions:
-  contents: write
-
-env:
-  # Caminho para o arquivo de projeto .csproj que será compilado
-  PROJECT_PATH: ReleaseZipper/ReleaseZipper.csproj
-  # Pasta temporária onde os arquivos prontos para release serão colocados.
-  # Usar uma pasta simples na raiz evita qualquer confusão de caminhos.
-  ARTIFACTS_DIR: release-artifacts
+  contents: write # Permissão para criar o release
 
 jobs:
   build-and-release:
-    # O workflow vai rodar em uma máquina virtual Windows mais recente
     runs-on: windows-latest
 
     steps:
-      # 1. Clona o código do seu repositório para a máquina virtual
+      # 1. Clona o repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Instala a versão 8.x do .NET SDK
+      # 2. Configura o ambiente .NET 8
       - name: Setup .NET 8.x
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      # 3. Restaura as dependências do projeto (pacotes NuGet)
+      # 3. Restaura as dependências do projeto
       - name: Restore dependencies
-        run: dotnet restore ${{ env.PROJECT_PATH }}
+        run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
 
-      # 4. Compila e Publica o projeto
+      # 4. Publica o projeto em uma pasta simples e previsível ('./publish')
       - name: Build and Publish
-        run: > # O '>' permite um comando de múltiplas linhas mais limpo
-          dotnet publish ${{ env.PROJECT_PATH }}
+        run: >
+          dotnet publish ReleaseZipper/ReleaseZipper.csproj
           --configuration Release
           --runtime win-x64
           --self-contained true
           -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          --output ${{ env.ARTIFACTS_DIR }} # <-- PONTO CHAVE! Força a saída para nossa pasta controlada.
+          --output ./publish
 
-      # 5. Cria o arquivo ZIP com o executável
-      - name: Create ZIP archive
-        # Cria um ZIP na raiz do projeto contendo TUDO que está dentro da pasta de artefatos.
-        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./${{ env.ARTIFACTS_DIR }}/*
+      # 5. Cria o ZIP sem usar 'cd', evitando a confusão de caminhos
+      - name: Create ZIP Archive
+        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./publish/*
 
-      # 6. Cria o Release no GitHub e faz o upload do arquivo ZIP
+      # 6. Cria o Release no GitHub e faz o upload (agora ele vai encontrar o arquivo)
       - name: Create GitHub Release and Upload Artifact
-        uses: softprops/action-gh-release@v2 # Versão mais recente e recomendada
+        uses: softprops/action-gh-release@v2
         with:
-          # A action agora encontra o arquivo ZIP facilmente, pois ele está na raiz.
           files: ReleaseZipper-${{ github.ref_name }}.zip
+          body: Release gerado automaticamente a partir da tag ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
