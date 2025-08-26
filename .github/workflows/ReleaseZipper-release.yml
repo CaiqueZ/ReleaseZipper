@@ -3,11 +3,14 @@ name: ReleaseZipper Release
 on:
   push:
     tags:
-      - 'v*'   # Só roda quando você cria uma tag tipo v1.0.0
+      - 'v*'
 
 jobs:
   build:
     runs-on: windows-latest
+
+    permissions:
+      contents: write   # 👈 dá permissão para criar Release
 
     steps:
     - name: Baixar código
@@ -19,17 +22,15 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Compilar ReleaseZipper (self-contained exe)
-      shell: bash
-      run: |
-        dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 \
-          --self-contained true \
-          /p:PublishSingleFile=true \
-          /p:InformationalVersion=${{ github.ref_name }}
+      run: dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 `
+             --self-contained true `
+             /p:PublishSingleFile=true `
+             /p:InformationalVersion=${{ github.ref_name }}
 
     - name: Empacotar ReleaseZipper-${{ github.ref_name }}.zip
       run: |
         cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-        tar -a -c -f ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
+        7z a ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
 
     - name: Publicar no GitHub Releases
       uses: softprops/action-gh-release@v1
