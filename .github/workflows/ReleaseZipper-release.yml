@@ -45,6 +45,7 @@ jobs:
           -p:Version=${{ steps.tag_version.outputs.VERSION }}
           -p:FileVersion=${{ steps.tag_version.outputs.VERSION }}
           -p:InformationalVersion=${{ github.ref_name }}
+          -p:IncludeSourceRevisionInInformationalVersion=false
           --output ./publish-portable
 
       # 6. Publica a versão FRAMEWORK-DEPENDENT
@@ -58,6 +59,7 @@ jobs:
           -p:Version=${{ steps.tag_version.outputs.VERSION }}
           -p:FileVersion=${{ steps.tag_version.outputs.VERSION }}
           -p:InformationalVersion=${{ github.ref_name }}
+          -p:IncludeSourceRevisionInInformationalVersion=false
           --output ./publish-framework-dependent
 
       # 7. Cria o ZIP da versão PORTABLE
