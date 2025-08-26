@@ -27,25 +27,55 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
 
-      # 4. Publica o projeto em uma pasta simples e previsível ('./publish')
-      - name: Build and Publish
+      # --- ETAPA DE BUILD ---
+
+      # 4. Publica a versão PORTABLE (grande, mas funciona em qualquer lugar)
+      - name: Build and Publish (Portable)
         run: >
           dotnet publish ReleaseZipper/ReleaseZipper.csproj
           --configuration Release
           --runtime win-x64
           --self-contained true
           -p:PublishSingleFile=true
-          --output ./publish
+          -p:EnableCompressionInSingleFile=true
+          --output ./publish-portable
 
-      # 5. Cria o ZIP sem usar 'cd', evitando a confusão de caminhos
-      - name: Create ZIP Archive
-        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./publish/*
+      # 5. Publica a versão FRAMEWORK-DEPENDENT (pequena, requer .NET 8)
+      - name: Build and Publish (Framework-Dependent)
+        run: >
+          dotnet publish ReleaseZipper/ReleaseZipper.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained false
+          -p:PublishSingleFile=true
+          --output ./publish-framework-dependent
 
-      # 6. Cria o Release no GitHub e faz o upload (agora ele vai encontrar o arquivo)
-      - name: Create GitHub Release and Upload Artifact
+      # --- ETAPA DE EMPACOTAMENTO ---
+
+      # 6. Cria o ZIP da versão PORTABLE com o novo nome
+      - name: Create ZIP for Portable Version
+        run: 7z a ReleaseZipper-portable-${{ github.ref_name }}.zip ./publish-portable/*
+
+      # 7. Cria o ZIP da versão FRAMEWORK-DEPENDENT com o novo nome
+      - name: Create ZIP for Framework-Dependent Version
+        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./publish-framework-dependent/*
+      
+      # --- ETAPA DE RELEASE ---
+
+      # 8. Cria o Release no GitHub e anexa AMBOS os arquivos com os nomes corretos
+      - name: Create GitHub Release and Upload Artifacts
         uses: softprops/action-gh-release@v2
         with:
-          files: ReleaseZipper-${{ github.ref_name }}.zip
-          body: Release gerado automaticamente a partir da tag ${{ github.ref_name }}
+          # Lista os novos nomes dos arquivos para upload
+          files: |
+            ReleaseZipper-portable-${{ github.ref_name }}.zip
+            ReleaseZipper-${{ github.ref_name }}.zip
+          # O corpo do release foi atualizado para refletir os novos nomes
+          body: |
+            Release gerado automaticamente a partir da tag ${{ github.ref_name }}.
+
+            **Downloads:**
+            - **`ReleaseZipper-portable-${{ github.ref_name }}.zip`**: Versão completa que funciona em qualquer Windows 64-bit, sem precisar instalar nada.
+            - **`ReleaseZipper-${{ github.ref_name }}.zip`**: Versão menor que requer a instalação do [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0).
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
