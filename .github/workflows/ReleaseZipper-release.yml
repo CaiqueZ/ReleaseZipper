@@ -8,40 +8,48 @@ on:
 permissions:
   contents: write
 
+env:
+  PROJECT_PATH: ReleaseZipper/ReleaseZipper.csproj
+  BUILD_CONFIG: Release
+  RUNTIME_ID: win-x64
+  OUTDIR: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
+  ZIPNAME: ReleaseZipper-${{ github.ref_name }}.zip
+  ZIPPATH: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/${{ env.ZIPNAME }}
+
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: Setup .NET 8.x
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
       - name: Restore dependencies
-        run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
+        run: dotnet restore ${{ env.PROJECT_PATH }}
 
-      - name: Build and Publish
+      - name: Build and Publish (single file, self-contained)
         run: |
-          dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.BUILD_CONFIG }} -r ${{ env.RUNTIME_ID }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
-      - name: List files in publish directory
-        run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
+      - name: List published files for debug
+        run: ls -lh ${{ env.OUTDIR }}
 
-      - name: Zip published files
+      - name: Create ZIP file
         run: |
-          cd ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-          7z a ../../ReleaseZipper-${{ github.ref_name }}.zip *
+          cd ${{ env.OUTDIR }}
+          7z a ../../${{ env.ZIPNAME }} *
 
-      - name: List ZIP in release directory
+      - name: List ZIP in release directory for debug
         run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows
 
-      - name: Create GitHub Release
+      - name: Upload ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-${{ github.ref_name }}.zip
+          files: ${{ env.ZIPPATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
