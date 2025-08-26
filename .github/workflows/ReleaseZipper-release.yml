@@ -3,14 +3,14 @@ name: ReleaseZipper Release
 on:
   push:
     tags:
-      - 'v*'   # Só roda quando criamos uma tag começando com v
+      - 'v*'   # Só roda quando você cria uma tag tipo v1.0.0
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout do código
+    - name: Baixar código
       uses: actions/checkout@v4
 
     - name: Instalar .NET
@@ -20,3 +20,15 @@ jobs:
 
     - name: Compilar ReleaseZipper
       run: dotnet publish -c Release -r win-x64 --self-contained false /p:InformationalVersion=${{ github.ref_name }}
+
+    - name: Empacotar release.zip
+      run: |
+        cd ./ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish/
+        tar -a -c -f ../../../release.zip *
+
+    - name: Publicar no GitHub Releases
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./ReleaseZipper/bin/Release/net8.0-windows/release.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
