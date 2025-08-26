@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
 
     permissions:
-      contents: write   # 👈 dá permissão para criar Release
+      contents: write   # 👈 Necessário para criar Release
 
     steps:
     - name: Baixar código
