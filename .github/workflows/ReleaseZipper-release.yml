@@ -1,41 +1,43 @@
-name: ReleaseZipper Release
+name: Build and Release
 
 on:
   push:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
 
-    permissions:
-      contents: write   # 👈 Necessário para criar Release
-
     steps:
-    - name: Baixar código
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Instalar .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Compilar ReleaseZipper (self-contained exe)
-      run: dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 `
-             --self-contained true `
-             /p:PublishSingleFile=true `
-             /p:InformationalVersion=${{ github.ref_name }}
+      - name: Restore dependencies
+        run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
 
-    - name: Empacotar ReleaseZipper-${{ github.ref_name }}.zip
-      run: |
-        cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-        7z a ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
+      - name: Build
+        run: dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 
-    - name: Publicar no GitHub Releases
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ./ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-${{ github.ref_name }}.zip
-        body: "Release gerado automaticamente a partir da tag ${{ github.ref_name }}"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Zip build
+        run: |
+          cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
+          7z a ../../../../ReleaseZipper-v${{ github.ref_name }}.zip *
+
+      - name: Debug arquivos gerados
+        run: ls -R ReleaseZipper/bin/Release/net8.0-windows
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-v${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
