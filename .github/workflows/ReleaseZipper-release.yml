@@ -38,6 +38,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-v${{ github.ref_name }}.zip
+          files: ./ReleaseZipper/bin/Release/net8.0-windows/win-x64/ReleaseZipper-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
