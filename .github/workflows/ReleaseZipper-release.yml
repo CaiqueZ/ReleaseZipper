@@ -27,13 +27,16 @@ jobs:
       - name: Build
         run: dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
+      - name: Lista arquivos do publish
+        run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
+
       - name: Zip build
         run: |
           cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
           7z a ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
 
       - name: Debug arquivos gerados
-        run: ls -R ReleaseZipper/bin/Release/net8.0-windows
+        run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
