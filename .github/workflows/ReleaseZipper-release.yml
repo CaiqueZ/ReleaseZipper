@@ -12,9 +12,11 @@ env:
   PROJECT_PATH: ReleaseZipper/ReleaseZipper.csproj
   BUILD_CONFIG: Release
   RUNTIME_ID: win-x64
+  NET_VERSION: net8.0-windows
   OUTDIR: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-  ZIPNAME: ReleaseZipper-${{ github.ref_name }}.zip
-  ZIPPATH: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/${{ env.ZIPNAME }}
+  ZIP_BASENAME: ReleaseZipper-${{ github.ref_name }}.zip
+  ZIP_DIR: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows
+  ZIP_PATH: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-${{ github.ref_name }}.zip
 
 jobs:
   build:
@@ -36,20 +38,27 @@ jobs:
         run: |
           dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.BUILD_CONFIG }} -r ${{ env.RUNTIME_ID }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
-      - name: List published files for debug
+      - name: List published files (debug)
         run: ls -lh ${{ env.OUTDIR }}
 
-      - name: Create ZIP file
+      - name: Create ZIP with published files
         run: |
           cd ${{ env.OUTDIR }}
-          7z a ../../${{ env.ZIPNAME }} *
+          7z a ../../${{ env.ZIP_BASENAME }} *
 
-      - name: List ZIP in release directory for debug
-        run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows
+      - name: List ZIP in release directory (debug)
+        run: ls -lh ${{ env.ZIP_DIR }}
+
+      - name: Ensure ZIP exists
+        run: |
+          if not exist "${{ env.ZIP_PATH }}" (
+            echo "ERROR: ZIP not found: ${{ env.ZIP_PATH }}"
+            exit 1
+          )
 
       - name: Upload ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ env.ZIPPATH }}
+          files: ${{ env.ZIP_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
