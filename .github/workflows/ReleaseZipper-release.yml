@@ -24,18 +24,19 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
 
-      - name: Build
-        run: dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+      - name: Build and Publish
+        run: |
+          dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
-      - name: Lista arquivos do publish
+      - name: List files in publish directory
         run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
 
-      - name: Zip build
+      - name: Zip published files
         run: |
-          cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-          7z a ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
+          cd ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
+          7z a ../../ReleaseZipper-${{ github.ref_name }}.zip *
 
-      - name: Debug arquivos gerados
+      - name: List ZIP in release directory
         run: ls -lh ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows
 
       - name: Create GitHub Release
