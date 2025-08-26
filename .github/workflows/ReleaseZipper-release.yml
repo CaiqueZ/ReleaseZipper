@@ -38,6 +38,7 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
+          -p:AssemblyInformationalVersion=${{ github.ref_name }}
           --output ./publish-portable
 
       # 5. Publica a versão FRAMEWORK-DEPENDENT (pequena, requer .NET 8)
@@ -48,6 +49,7 @@ jobs:
           --runtime win-x64
           --self-contained false
           -p:PublishSingleFile=true
+          -p:AssemblyInformationalVersion=${{ github.ref_name }}
           --output ./publish-framework-dependent
 
       # --- ETAPA DE EMPACOTAMENTO ---
@@ -75,6 +77,7 @@ jobs:
             Release gerado automaticamente a partir da tag ${{ github.ref_name }}.
 
             **Downloads:**
+            - **`⚠️Atênção`**: Esse programa foi desenvolvido para rodar em versões do Windows 10/11+.
             - **`ReleaseZipper-portable-${{ github.ref_name }}.zip`**: Versão completa que funciona em qualquer Windows 64-bit, sem precisar instalar nada.
             - **`ReleaseZipper-${{ github.ref_name }}.zip`**: Versão menor que requer a instalação do [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0).
         env:
