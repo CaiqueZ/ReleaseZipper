@@ -3,28 +3,23 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*' # Dispara o workflow em tags como v1.0, v1.2.3, etc.
 
 permissions:
-  contents: write
+  contents: write # Necessário para criar a Release e fazer upload de arquivos
 
 env:
   PROJECT_PATH: ReleaseZipper/ReleaseZipper.csproj
-  BUILD_CONFIG: Release
-  RUNTIME_ID: win-x64
-  NET_VERSION: net8.0-windows
-  OUTDIR: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-  ZIP_BASENAME: ReleaseZipper-${{ github.ref_name }}.zip
-  ZIP_DIR: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows
-  ZIP_PATH: ReleaseZipper/ReleaseZipper/bin/Release/net8.0-windows/ReleaseZipper-${{ github.ref_name }}.zip
+  # Define um diretório de saída simples e previsível para os artefatos
+  ARTIFACTS_DIR: release-artifacts
 
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Versão atualizada
 
       - name: Setup .NET 8.x
         uses: actions/setup-dotnet@v4
@@ -34,31 +29,24 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ${{ env.PROJECT_PATH }}
 
-      - name: Build and Publish (single file, self-contained)
+      - name: Build and Publish
         run: |
-          dotnet publish ${{ env.PROJECT_PATH }} -c ${{ env.BUILD_CONFIG }} -r ${{ env.RUNTIME_ID }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          dotnet publish ${{ env.PROJECT_PATH }} `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            --output ${{ env.ARTIFACTS_DIR }} # <-- A MUDANÇA PRINCIPAL! Força a saída para nossa pasta.
 
-      - name: List published files (debug)
-        run: ls -lh ${{ env.OUTDIR }}
+      - name: Create ZIP archive
+        # Cria um ZIP na raiz do projeto contendo tudo que está na pasta de artefatos
+        run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./${{ env.ARTIFACTS_DIR }}/*
 
-      - name: Create ZIP with published files
-        run: |
-          cd ${{ env.OUTDIR }}
-          7z a ../../${{ env.ZIP_BASENAME }} *
-
-      - name: List ZIP in release directory (debug)
-        run: ls -lh ${{ env.ZIP_DIR }}
-
-      - name: Ensure ZIP exists
-        run: |
-          if not exist "${{ env.ZIP_PATH }}" (
-            echo "ERROR: ZIP not found: ${{ env.ZIP_PATH }}"
-            exit 1
-          )
-
-      - name: Upload ZIP to GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Create GitHub Release and Upload ZIP
+        uses: softprops/action-gh-release@v2 # Versão atualizada
         with:
-          files: ${{ env.ZIP_PATH }}
+          # A action irá procurar por todos os arquivos .zip na raiz do projeto
+          files: ReleaseZipper-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
