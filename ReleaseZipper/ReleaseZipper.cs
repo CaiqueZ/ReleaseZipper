@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace ReleaseZipper
@@ -36,7 +37,13 @@ namespace ReleaseZipper
             // Método gerado automaticamente que inicializa todos os componentes visuais do formulário.
             InitializeComponent();
             // Define o texto do rótulo de versão para a versão atual do aplicativo.
-            lblVer.Text = $"v{Application.ProductVersion}";
+            string version = Assembly
+        .GetExecutingAssembly()
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+        .InformationalVersion ?? "dev";
+
+            lblVer.Text = $"Versão {version}";
+
         }
 
         /// <summary>
@@ -196,6 +203,11 @@ namespace ReleaseZipper
         private void btnSair_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void lblVer_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(lblVer.Text);
         }
     }
 }

@@ -3,19 +3,19 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
-		<Nullable>enable</Nullable>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
 
+		<!-- Metadados básicos -->
 		<AssemblyTitle>ReleaseZipper</AssemblyTitle>
 		<AssemblyDescription>Compactador de arquivos que gera release.zip na Área de Trabalho</AssemblyDescription>
 		<Company>WhiteZ</Company>
 		<Product>ReleaseZipper</Product>
 		<Authors>CaiqueZ</Authors>
-		<Version>1.0.0</Version>
-		<FileVersion>1.0.0</FileVersion>
-		
-		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+
+		<!-- Versão padrão no DEV -->
+		<AssemblyInformationalVersion>dev</AssemblyInformationalVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	</PropertyGroup>
 
 </Project>

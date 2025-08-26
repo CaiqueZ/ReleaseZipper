@@ -109,6 +109,7 @@
             lblVer.TabIndex = 2;
             lblVer.Text = "...";
             lblVer.TextAlign = ContentAlignment.MiddleCenter;
+            lblVer.Click += lblVer_Click;
             // 
             // btnSair
             // 
@@ -168,6 +169,7 @@
             Controls.Add(btnSelecionarArquivos);
             FormBorderStyle = FormBorderStyle.None;
             Name = "ReleaseZipper";
+            StartPosition = FormStartPosition.CenterScreen;
             tabTop.ResumeLayout(false);
             tabTop.PerformLayout();
             ResumeLayout(false);
