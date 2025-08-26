@@ -1,0 +1,55 @@
+# Compilação / Build
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Arquivos temporários do VS
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Configurações locais
+.vs/
+*.dbmdl
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Pacotes NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+*.nuspec
+
+# Testes
+TestResults/
+*.coverage
+*.coveragexml
+
+# Arquivos de cache
+_ReSharper*/
+*.resharper
+*.DotSettings.user
+
+# Outros
+*.swp
+*.cache
+*.log
+*.pdb
+
+# Publicações
+publish/
+*.Publish.xml
+
+# Configurações do Rider
+.idea/
