@@ -19,15 +19,17 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Compilar ReleaseZipper (self-contained exe)
-      run: dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 `
-             --self-contained true `
-             /p:PublishSingleFile=true `
-             /p:InformationalVersion=${{ github.ref_name }}
+      shell: bash
+      run: |
+        dotnet publish ReleaseZipper/ReleaseZipper.csproj -c Release -r win-x64 \
+          --self-contained true \
+          /p:PublishSingleFile=true \
+          /p:InformationalVersion=${{ github.ref_name }}
 
     - name: Empacotar ReleaseZipper-${{ github.ref_name }}.zip
       run: |
         cd ReleaseZipper/bin/Release/net8.0-windows/win-x64/publish
-        7z a ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
+        tar -a -c -f ../../../../ReleaseZipper-${{ github.ref_name }}.zip *
 
     - name: Publicar no GitHub Releases
       uses: softprops/action-gh-release@v1
