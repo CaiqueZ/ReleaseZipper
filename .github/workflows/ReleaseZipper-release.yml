@@ -19,15 +19,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # Versão atualizada
+        uses: actions/checkout@v4
 
       - name: Setup .NET 8.x
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore ${{ env.PROJECT_PATH }}
 
       - name: Build and Publish
         run: |
@@ -37,16 +34,16 @@ jobs:
             --self-contained true `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
-            --output ${{ env.ARTIFACTS_DIR }} # <-- A MUDANÇA PRINCIPAL! Força a saída para nossa pasta.
+            --output ${{ env.ARTIFACTS_DIR }} # <-- Força a saída para uma pasta simples
 
       - name: Create ZIP archive
         # Cria um ZIP na raiz do projeto contendo tudo que está na pasta de artefatos
         run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./${{ env.ARTIFACTS_DIR }}/*
 
       - name: Create GitHub Release and Upload ZIP
-        uses: softprops/action-gh-release@v2 # Versão atualizada
+        uses: softprops/action-gh-release@v2 # Use a v2, que é mais recente
         with:
-          # A action irá procurar por todos os arquivos .zip na raiz do projeto
+          # A action agora encontra o arquivo ZIP facilmente na raiz do projeto
           files: ReleaseZipper-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
