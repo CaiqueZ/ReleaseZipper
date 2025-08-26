@@ -15,7 +15,6 @@
 
 		<!-- Versão padrão no DEV -->
 		<AssemblyInformationalVersion>dev</AssemblyInformationalVersion>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	</PropertyGroup>
 
 </Project>

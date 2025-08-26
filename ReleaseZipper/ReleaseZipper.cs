@@ -38,9 +38,9 @@ namespace ReleaseZipper
             InitializeComponent();
             // Define o texto do rótulo de versão para a versão atual do aplicativo.
             string version = Assembly
-        .GetExecutingAssembly()
-        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-        .InformationalVersion ?? "dev";
+            .GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion ?? "dev";
 
             lblVer.Text = $"Versão {version}";
 
