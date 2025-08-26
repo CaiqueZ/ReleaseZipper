@@ -202,12 +202,7 @@ namespace ReleaseZipper
 
         private void btnSair_Click(object sender, EventArgs e)
         {
-            this.Close();
-        }
-
-        private void lblVer_Click(object sender, EventArgs e)
-        {
-            Clipboard.SetText(lblVer.Text);
+            Application.Exit();
         }
     }
 }

@@ -109,7 +109,7 @@
             lblVer.TabIndex = 2;
             lblVer.Text = "...";
             lblVer.TextAlign = ContentAlignment.MiddleCenter;
-            lblVer.Click += lblVer_Click;
+            lblVer.MouseDown += tabTop_MouseDown;
             // 
             // btnSair
             // 
