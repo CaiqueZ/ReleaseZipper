@@ -6,15 +6,15 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!-- Metadados básicos -->
-		<AssemblyTitle>ReleaseZipper</AssemblyTitle>
-		<AssemblyDescription>Compactador de arquivos que gera release.zip na Área de Trabalho</AssemblyDescription>
 		<Company>WhiteZ</Company>
 		<Product>ReleaseZipper</Product>
 		<Authors>CaiqueZ</Authors>
+		<Description>Compactador de arquivos que gera release.zip na Área de Trabalho</Description>
+		<Copyright>Copyright © CaiqueZ 2025</Copyright>
 
-		<!-- Versão padrão no DEV -->
-		<AssemblyInformationalVersion>dev</AssemblyInformationalVersion>
+		<Version>1.0.0</Version>
+		<FileVersion>1.0.0</FileVersion>
+		<InformationalVersion>dev</InformationalVersion>
 	</PropertyGroup>
 
 </Project>

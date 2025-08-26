@@ -1,13 +1,3 @@
-name: Build and Release
-
-on:
-  push:
-    tags:
-      - 'v*' # Dispara o workflow em tags como v1.0, v1.2.3
-
-permissions:
-  contents: write # Permissão para criar o release
-
 jobs:
   build-and-release:
     runs-on: windows-latest
@@ -23,13 +13,16 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      # 3. Restaura as dependências do projeto
+      # 3. Restaura as dependências
       - name: Restore dependencies
         run: dotnet restore ReleaseZipper/ReleaseZipper.csproj
 
-      # --- ETAPA DE BUILD ---
+      # 4. Extrai a versão numérica da tag (ex: "v1.0.17" -> "1.0.17")
+      - name: Extract version from tag
+        id: tag_version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
-      # 4. Publica a versão PORTABLE (grande, mas funciona em qualquer lugar)
+      # 5. Publica a versão PORTABLE
       - name: Build and Publish (Portable)
         run: >
           dotnet publish ReleaseZipper/ReleaseZipper.csproj
@@ -38,10 +31,12 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
-          -p:AssemblyInformationalVersion=${{ github.ref_name }}
+          -p:Version=${{ steps.tag_version.outputs.VERSION }}
+          -p:FileVersion=${{ steps.tag_version.outputs.VERSION }}
+          -p:InformationalVersion=${{ github.ref_name }}
           --output ./publish-portable
 
-      # 5. Publica a versão FRAMEWORK-DEPENDENT (pequena, requer .NET 8)
+      # 6. Publica a versão FRAMEWORK-DEPENDENT
       - name: Build and Publish (Framework-Dependent)
         run: >
           dotnet publish ReleaseZipper/ReleaseZipper.csproj
@@ -49,30 +44,25 @@ jobs:
           --runtime win-x64
           --self-contained false
           -p:PublishSingleFile=true
-          -p:AssemblyInformationalVersion=${{ github.ref_name }}
+          -p:Version=${{ steps.tag_version.outputs.VERSION }}
+          -p:FileVersion=${{ steps.tag_version.outputs.VERSION }}
+          -p:InformationalVersion=${{ github.ref_name }}
           --output ./publish-framework-dependent
 
+      # O restante do arquivo (empacotamento e release) continua igual...
       # --- ETAPA DE EMPACOTAMENTO ---
-
-      # 6. Cria o ZIP da versão PORTABLE com o novo nome
       - name: Create ZIP for Portable Version
         run: 7z a ReleaseZipper-portable-${{ github.ref_name }}.zip ./publish-portable/*
-
-      # 7. Cria o ZIP da versão FRAMEWORK-DEPENDENT com o novo nome
       - name: Create ZIP for Framework-Dependent Version
         run: 7z a ReleaseZipper-${{ github.ref_name }}.zip ./publish-framework-dependent/*
       
       # --- ETAPA DE RELEASE ---
-
-      # 8. Cria o Release no GitHub e anexa AMBOS os arquivos com os nomes corretos
       - name: Create GitHub Release and Upload Artifacts
         uses: softprops/action-gh-release@v2
         with:
-          # Lista os novos nomes dos arquivos para upload
           files: |
             ReleaseZipper-portable-${{ github.ref_name }}.zip
             ReleaseZipper-${{ github.ref_name }}.zip
-          # O corpo do release foi atualizado para refletir os novos nomes
           body: |
             Release gerado automaticamente a partir da tag ${{ github.ref_name }}.
 
